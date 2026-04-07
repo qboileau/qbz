@@ -11,38 +11,23 @@
       let
         pkgs = import nixpkgs { inherit system; };
 
-        # ──────────────────────────────────────────────
-        # VERSION BUMP: update version, rev, and hashes
-        # when tagging a new release.
-        # ──────────────────────────────────────────────
-        qbzVersion = "1.2.4";
-        qbzRev     = "v${qbzVersion}";
-        srcHash    = ""; # nix build will report the correct hash on first run
-        npmHash    = ""; # nix build will report the correct hash on first run
+        version = (builtins.fromJSON (builtins.readFile ./package.json)).version;
       in
       {
-        packages.default = pkgs.rustPlatform.buildRustPackage rec {
+        packages.default = pkgs.rustPlatform.buildRustPackage {
+          inherit version;
           pname = "qbz";
-          version = qbzVersion;
-
-          src = pkgs.fetchFromGitHub {
-            owner = "vicrodh";
-            repo  = "qbz";
-            rev   = qbzRev;
-            hash  = srcHash;
-          };
+          src = self;
 
           cargoRoot = "src-tauri";
-          buildAndTestSubdir = cargoRoot;
+          buildAndTestSubdir = "src-tauri";
 
           cargoLock = {
-            lockFile = "${src}/src-tauri/Cargo.lock";
+            lockFile = ./src-tauri/Cargo.lock;
           };
 
-          npmDeps = pkgs.fetchNpmDeps {
-            name = "${pname}-${version}-npm-deps";
-            inherit src;
-            hash = npmHash;
+          npmDeps = pkgs.importNpmLock {
+            npmRoot = self;
           };
 
           env.LIBCLANG_PATH = "${pkgs.lib.getLib pkgs.llvmPackages.libclang}/lib";
@@ -51,7 +36,7 @@
             clang
             cargo-tauri.hook
             nodejs
-            npmHooks.npmConfigHook
+            importNpmLock.npmConfigHook
             pkg-config
             makeWrapper
           ];
@@ -68,6 +53,8 @@
             # These require a writable HOME and D-Bus keyring service
             "--skip=credentials::tests::test_credentials_roundtrip"
             "--skip=credentials::tests::test_encryption_roundtrip"
+            # Requires machine UUID / fingerprint unavailable in sandbox
+            "--skip=qconnect_service::tests::refreshes_local_renderer_id_from_unique_fingerprint_when_uuid_missing"
           ];
 
           postInstall = ''

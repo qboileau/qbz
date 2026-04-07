@@ -103,17 +103,23 @@ inputs = {
 **NixOS (configuration.nix):**
 
 ```nix
-environment.systemPackages = [
-  inputs.qbz.packages.${pkgs.system}.default
-];
+{pkgs, inputs, ...} :
+{   
+  environment.systemPackages = [
+    inputs.qbz.packages.${pkgs.system}.default
+  ];
+}
 ```
 
 **Home Manager:**
 
 ```nix
-home.packages = [
-  inputs.qbz.packages.${pkgs.system}.default
-];
+{pkgs, inputs, ...} :
+{   
+  home.packages = [
+    inputs.qbz.packages.${pkgs.system}.default
+  ];
+}
 ```
 
 **Try without installing (ephemeral shell):**

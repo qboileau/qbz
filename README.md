@@ -87,6 +87,42 @@ emerge media-sound/qbz-bin    # prebuilt binary
 emerge media-sound/qbz        # build from source
 ```
 
+### Nix Flake (NixOS / Home Manager)
+
+Add QBZ as a flake input and install it declaratively — no overlay or hash maintenance needed.
+
+**flake.nix inputs:**
+
+```nix
+inputs = {
+  qbz.url = "github:vicrodh/qbz";  # pin to a release tag using by adding ?ref=refs/tags/v1.2.4
+  qbz.inputs.nixpkgs.follows = "nixpkgs";
+};
+```
+
+**NixOS (configuration.nix):**
+
+```nix
+environment.systemPackages = [
+  inputs.qbz.packages.${pkgs.system}.default
+];
+```
+
+**Home Manager:**
+
+```nix
+home.packages = [
+  inputs.qbz.packages.${pkgs.system}.default
+];
+```
+
+**Try without installing (ephemeral shell):**
+
+```bash
+nix shell github:vicrodh/qbz
+qbz
+```
+
 ### AppImage
 
 Download from [Releases](https://github.com/vicrodh/qbz/releases): `chmod +x QBZ.AppImage && ./QBZ.AppImage`
